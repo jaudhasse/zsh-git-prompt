@@ -15,6 +15,20 @@ stdout, stderr = po.communicate()
 if po.returncode != 0:
     sys.exit(0)  # Not a git repository
 
+def get_tag_or_hash():
+    cmd = Popen(['git', 'describe', '--exact-match'], stdout=PIPE, stderr=PIPE)
+    so, se = cmd.communicate()
+    tag = '%s' % so.decode('utf-8').strip()
+
+    if tag:
+        return tag
+    else:
+        cmd = Popen(['git', 'rev-parse', '--short', 'HEAD'], stdout=PIPE, stderr=PIPE)
+        so, se = cmd.communicate()
+        hash_name = '%s' % so.decode('utf-8').strip()
+        return ''.join([prehash, hash_name])
+
+
 # collect git status information
 untracked, staged, changed, conflicts = [], [], [], []
 num_ahead, num_behind = 0, 0
@@ -55,20 +69,6 @@ for st in status:
             conflicts.append(st)
         elif st[0] != ' ':
             staged.append(st)
-
-def get_tag_or_hash():
-    cmd = Popen(['git', 'describe', '--exact-match'], stdout=PIPE, stderr=PIPE)
-    so, se = cmd.communicate()
-    tag = '%s' % so.decode('utf-8').strip()
-
-    if tag:
-        return tag
-    else:
-        cmd = Popen(['git', 'rev-parse', '--short', 'HEAD'], stdout=PIPE, stderr=PIPE)
-        so, se = cmd.communicate()
-        hash_name = '%s' % so.decode('utf-8').strip()
-        return ''.join(prehash, hash_name)
-
 
 def get_stash():
     cmd = Popen(['git', 'rev-parse', '--git-dir'], stdout=PIPE, stderr=PIPE)
